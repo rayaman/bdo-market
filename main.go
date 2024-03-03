@@ -1,33 +1,26 @@
 package main
 
 import (
-	"app/types"
 	"fmt"
-	"json"
-	"net/http"
+
+	"github.com/rayaman/bdo-market/app/api"
+	"github.com/rayaman/bdo-market/app/data"
+	"github.com/rayaman/bdo-market/app/types"
 )
 
 func main() {
-
-}
-
-func GetMarketItems() []types.MarketItem {
-	var marketdata []types.MarketItem
-	url := "https://api.arsha.io/v2/na/market"
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-
+	marketdata, err := api.GetMarketItems()
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return
+	fmt.Printf("Total length: %d\n", len(marketdata))
+
+	filtered_items := data.Filter(marketdata, func(item types.MarketItem) bool {
+		return item.CurrentStock > 100000
+	})
+
+	fmt.Printf("Filtered length: %d\n", len(filtered_items))
+	for _, item := range filtered_items {
+		fmt.Println(data.SprintMarketItem(item))
 	}
-	defer res.Body.Close()
-	json.UnMarshal(res.Body, &marketdata)
-	return marketdata
 }
